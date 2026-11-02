@@ -50,4 +50,60 @@ if uploaded_file is None:
     st.warning("Upload the generated test_csv file to start evaluation.")
 else:
     try:
+        uploaded_data = pd.read_csv(uploaded_file)
+        rquired_features = load_features_name()
+
+        st.subheader("Uploaded-data-preview")
+        st.dataframe(uploaded_data.head(10), use_container_width=True)
+
+        missing_features = [feature for feature in required_features if feature not in uploaded_data.columns]
+        if TARGET_COLUMN not in uploaded_data.columns:
+            st.error(f"The uploaded csv must contain the "
+                     f"`{TARGET_COLUMN}` column.")
+        elif missing_feautes:
+            st.error("The uploaded csv is missing these featurs: "
+                     +", ".join(missing_features)
+        else:
+            X_test = uploaded_data[required_features]
+            y_test = uploaded_data[TARGET_COLUMN]
+
+            selected_model = load_saved_model(MODEL_FILES[selected_model_name])
+            predictions = selected_model.predict(X_test)
+            probabilities = selected_model.predict_proba(X_test)[:, 1]
+            metrics = calculate_metrics(y_test, predictions, probabilities)
+            
+            st.success(f"{selected_model_name} evaluated successfully. "
+                       "The model was not retrained.")
+            st.subheader("Evaluation metrics"
+            metrics_columns = st.columns(6)
+            for column, (metric_name, metric_value) in zip(metric_columns, metric.items()):
+                columns.metric(metric_name, f"{metric_value:.4f}")
+                left_column, right_column = st.columns(2)
+                with left_column:
+                st.subheader("Confusion matrix")
+
+                figure, axis = plt.subplots(figsize=(5,4))
+
+                sns.heatmap(matrix, annot = True, fmt="d", cmap="Blues", cbar=False, xticklabels=["Malignant", "Benign"], yticklabels=["Malignant", "Benign"], ax=axis)
+                axis.set_xlabel("Predicted Class")
+                axis.set_ylabel("Actual Class")
+                axis.set_title(selected_model_name)
+
+                st.pyplot(figure)
+            with right_column:
+                st.subheader(Classification report")
+
+                report = classification_report(y_test, predictions, target_names=["Malignant", "Benign"], output_dict = True, zero_division = 0)
+                report_table = pd.DataFrame(report).transpose()
+                st.dataframe(report_table.round(4), use_container_width=True)
+            result_table = uploaded_data.copy()
+            result_table["predicted_target"] = predictions
+            result_table["probability_benign"] = probabilities
+
+            st.download_button(label = "Download predictions results", data=result_table.to_csv(index=False), file_name="prediction_results.csv", mime="text/csv")
+    except ValueError as error:
+        st.error(f"Evaluation error: {error}")
+    except Exception as error:
+        st.error("The file could not be processed. " 
+        f"Technical details: {error}")
         
