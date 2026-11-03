@@ -1,5 +1,5 @@
 # import dependencies
-from pathlib import path
+from pathlib import Path
 import joblib
 import pandas as pd
 
@@ -10,16 +10,16 @@ from sklearn.preprocessing import StandardScaler
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from skelearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import svc
+from sklearn.svm import SVC
 
-from sklearn.metric import accuracy_score, roc_auc_score, precision_score, recall_score, f1_score, mathews_corrcoef
+from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, recall_score, f1_score, matthews_corrcoef
 
 # Global variables
 RANDOM_STATE = 42
 MODEL_DIRECTORY = Path("model")
-MODEL.DIRECTORY.mkdir(exist_ok = True)
+MODEL_DIRECTORY.mkdir(exist_ok = True)
 
 # 1. Load dataset
 dataset = load_breast_cancer(as_frame = True)
@@ -29,7 +29,7 @@ target_name = "target"
 
 # display the shape of the dataset
 print("Dataset dimention: ", X.shape)
-print("\Class Distribution: ", y.value_counts())
+print("\nClass Distribution: ", y.value_counts())
 
 # 2. slit train and test data (20% test data, 80% train data)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y)
@@ -39,24 +39,24 @@ models = {
     # 1. Logistic regression
     "Logistic Regression" : Pipeline([
         ("Scalar", StandardScaler()), 
-        ("classifier", LogisticRegression(max_itr = 2000, random_state=RANDOM_STATE))
+        ("classifier", LogisticRegression(max_iter = 2000, random_state=RANDOM_STATE))
     ]),
   
     # 2. decision tree
-    "Decision Tree": DecisionTreeClassifer(max_depth=5, min_sample_split = 5, random_state=RANDOM_STATE),
+    "Decision Tree": DecisionTreeClassifier(max_depth=5, min_samples_split=5, random_state=RANDOM_STATE),
   
     # 3. K Neighbors
     "KNN": Pipeline([
-        ("scalar", StandardScalar()), 
-        ("classifier", KNeighborsClassifier(neighbors=5))
+        ("scalar", StandardScaler()), 
+        ("classifier", KNeighborsClassifier(n_neighbors=5))
     ]),
 
     # 4. Naive Bayes
-    "Naive Bayes", GaussianNB(),
+    "Naive Bayes": GaussianNB(),
 
     # 5. Support vector machine
     "Support Vector Machine": Pipeline([
-        ("scalar", StandardScaler)
+        ("scalar", StandardScaler()),
         ("classifier", SVC(kernel = "rbf", probability=True, random_state=RANDOM_STATE))
     ])
 }
@@ -97,7 +97,7 @@ for model_name, model in models.items():
     save_path = MODEL_DIRECTORY / model_file_names[model_name]
     joblib.dump(model, save_path)
 
-    print(f"Saved model to {save_path}) 
+    print(f"Saved model to {save_path}") 
 
 # 5. save feature names
 joblib.dump(list(X.columns), MODEL_DIRECTORY / "feature_names.joblib")
@@ -109,11 +109,11 @@ test_data.to_csv("test_data.csv", index=False)
 
 # 7. save and print comparision
 results = pd.DataFrame(evaluation_rows)
-metric_column = ["Accuracy", "AUC", "Precision", "Recall", "F1", "MCC"]
+metric_columns = ["Accuracy", "AUC", "Precision", "Recall", "F1", "MCC"]
 results[metric_columns] = results[metric_columns].round(4)
 
 print("\nModel comparision:")
 print(results.to_string(index=False))
 
-winner_row = results.loc["MCC"].idxmax()]
+winner_row = results.loc[results["MCC"].idxmax()]
 print("\nOverall winner based on MCC: ", winner_row["ML Model Name"])
