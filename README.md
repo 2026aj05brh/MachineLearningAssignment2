@@ -15,5 +15,9 @@ Number of input features: 30
 Target classes:
 
 0: Malignant
-1: Benign
+1: Benign   
+
 The features are numerical measurements computed from digitized images of breast-mass fine-needle aspirates. They describe characteristics such as radius, texture, perimeter, area, smoothness and compactness.
+
+## 3. Github repository link:
+githu report
