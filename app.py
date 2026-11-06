@@ -103,9 +103,24 @@ else:
 
             with right_column:
                 st.subheader("Classification report")
-                report = classification_report(y_test, predictions, target_names=["Malignant", "Benign"], output_dict = True, zero_division = 0)
+                report = classification_report(y_test, 
+                                               predictions, 
+                                               target_names=["Malignant", "Benign"], 
+                                               output_dict = True, 
+                                               zero_division = 0
+                                               )
+                accuracy = report.pop("accuracy")
                 report_table = pd.DataFrame(report).transpose()
-                st.dataframe(report_table.round(4), use_container_width=True)
+                st.metric("Overall Accuracy", f"{accuracy:.4f}")
+                st.dataframe(
+                    report_table.style.format({
+                        "precision": "{:.4f}",
+                        "recall": "{:.4f}",
+                        "f1-score": "{:.4f}",
+                        "support": "{:,.0f}"
+                    }), 
+                    use_container_width=True
+                    )
 
             result_table = uploaded_data.copy()
             result_table["predicted_target"] = predictions
